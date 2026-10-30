@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>My Sheets</title>
+<style>
+:root{--bg:#fff;--fg:#1f2328;--mut:#656d76;--line:#d0d7de;--head:#f3f4f6;--acc:#1a73e8;--sel:#e8f0fe;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#16181c;--fg:#e6e8eb;--mut:#9aa1a9;--line:#3a3f46;--head:#23272d;--acc:#6ea8fe;--sel:#24324a}}
+:root[data-theme="dark"]{--bg:#16181c;--fg:#e6e8eb;--mut:#9aa1a9;--line:#3a3f46;--head:#23272d;--acc:#6ea8fe;--sel:#24324a}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--fg);font:14px system-ui,-apple-system,"Segoe UI",sans-serif;display:flex;flex-direction:column}
+button,input{font:inherit;color:var(--fg)}
+button,.btn{background:var(--head);border:1px solid var(--line);border-radius:6px;padding:5px 10px;cursor:pointer;display:inline-block}
+button:hover,.btn:hover{border-color:var(--acc)}
+.pri{background:var(--acc);color:#fff;border-color:var(--acc)}
+#home{flex:1;overflow:auto;padding:16px;max-width:760px;width:100%;box-sizing:border-box;margin:0 auto}
+#home h1{margin:0 0 12px;font-size:22px}
+#hb{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.card{display:flex;align-items:center;gap:10px;border:1px solid var(--line);border-radius:10px;padding:12px;margin-bottom:8px;cursor:pointer;flex-wrap:wrap}
+.card:hover{border-color:var(--acc)}
+.card .nm{flex:1;min-width:140px;font-weight:600}
+.meta{color:var(--mut);font-size:12px}
+#msg{color:#d1242f;margin:0 0 10px}
+#app{display:none;flex-direction:column;flex:1;min-height:0}
+#bar{display:flex;gap:6px;flex-wrap:wrap;align-items:center;padding:8px;border-bottom:1px solid var(--line)}
+#bname{width:140px;background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:5px 8px;font-weight:600}
+#fx{flex:1;min-width:160px;background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:5px 8px}
+#ref{min-width:36px;text-align:center;color:var(--mut)}
+#wrap{flex:1;overflow:auto;min-height:0}
+table{border-collapse:collapse;table-layout:fixed}
+th,td{border:1px solid var(--line);height:30px;padding:0 8px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;scroll-margin:34px 50px}
+th{background:var(--head);color:var(--mut);font-weight:500;position:sticky;top:0;z-index:2}
+th.rh{left:0;z-index:3}
+td.rh{background:var(--head);color:var(--mut);text-align:center;position:sticky;left:0;z-index:1;padding:0}
+.rz{position:absolute;right:0;top:0;bottom:0;width:10px;cursor:col-resize;touch-action:none}
+.rz:hover{background:var(--acc);opacity:.5}
+td.sel{outline:2px solid var(--acc);outline-offset:-2px;background:var(--sel)}
+td.num{text-align:right}
+td input{width:100%;height:100%;border:0;outline:2px solid var(--acc);background:var(--bg);padding:0;margin:0;box-sizing:border-box}
+#tabs{display:flex;gap:4px;padding:6px 8px;border-top:1px solid var(--line);overflow-x:auto;align-items:center}
+.tab{padding:4px 12px;border:1px solid var(--line);border-radius:6px;cursor:pointer;white-space:nowrap}
+.tab.on{background:var(--acc);color:#fff;border-color:var(--acc)}
+.tab input,.card input{width:120px;background:var(--bg);border:1px solid var(--line);border-radius:4px}
+#dlg{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;z-index:9}
+#dlg>div{background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:14px;width:min(560px,92vw)}
+#dlg textarea{width:100%;height:220px;box-sizing:border-box;background:var(--bg);color:var(--fg);border:1px solid var(--line);border-radius:6px}
+#dlg p{margin:0 0 8px;color:var(--mut)}
+#dbt{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+</style>
+</head>
+<body>
+<div id="home">
+  <h1>📊 My Sheets</h1>
+  <div id="hb">
+    <button class="pri" id="newb">+ New sheet</button>
+    <label class="btn" for="up">⬆ Excel / CSV upload</label>
+    <input type="file" id="up" accept=".xlsx,.xls,.csv" hidden>
+    <button id="bk">Backup / Restore</button>
+  </div>
+  <p id="msg"></p>
+  <div id="list"></div>
+</div>
+
+<div id="app">
+  <div id="bar">
+    <button id="homeb">← Home</button>
+    <input id="bname" title="File ka naam">
+    <span id="ref">A1</span>
+    <input id="fx" placeholder="Value ya formula, jaise =SUM(A1:A5)">
+    <button id="b" title="Bold (Ctrl+B)"><b>B</b></button>
+    <input type="color" id="bg" value="#fff2a8" title="Cell color" style="width:34px;height:30px;padding:0">
+    <button id="nobg">✕ color</button>
+    <button id="addr">+ Row</button>
+    <button id="addc">+ Col</button>
+    <button id="sortb" title="Selected column ko A→Z sort karo">Sort A→Z</button>
+    <button id="io">Export / Import</button>
+  </div>
+  <div id="wrap"><table id="t"></table></div>
+  <div id="tabs"></div>
+</div>
+
+<div id="dlg"><div>
+  <p>CSV ya backup (JSON) yahan copy karein, ya paste karke import karein.</p>
+  <textarea id="ta"></textarea>
+  <div id="dbt">
+    <button id="exc">Is sheet ka CSV</button>
+    <button id="exj">Poora backup (JSON)</button>
+    <button id="cp">Copy</button>
+    <button id="imc">Import CSV (is sheet mein)</button>
+    <button id="imj">Restore backup</button>
+    <button id="cl">Close</button>
+  </div>
+</div></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+const K='mysheet.v2',DW=140,RW=46;
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+function mk(n){return{name:n,rows:100,cols:26,cells:{},widths:{}}}
+let DB=null,cur=null;
+try{DB=JSON.parse(localStorage.getItem(K))}catch(e){}
+if(!DB||!DB.books){DB={books:[]};
+  try{const o=JSON.parse(localStorage.getItem('mysheet.v1'));if(o&&o.sheets)DB.books.push({id:uid(),name:'My Sheet',updated:Date.now(),sheets:o.sheets,active:o.active||0})}catch(e){}}
+function save(){if(cur)cur.updated=Date.now();try{localStorage.setItem(K,JSON.stringify(DB))}catch(e){}}
+const sh=()=>cur.sheets[cur.active];
+let sel={r:0,c:0},cache={},busy=new Set(),editing=false;
+const $=id=>document.getElementById(id);
+const cell=(r,c)=>document.querySelector(`td[data-r="${r}"][data-c="${c}"]`);
+function cn(i){return i<26?String.fromCharCode(65+i):String.fromCharCode(64+Math.floor(i/26))+String.fromCharCode(65+i%26)}
+function pr(s){const m=/^([A-Z]+)(\d+)$/.exec(s);if(!m)throw 0;let c=0;for(const ch of m[1])c=c*26+ch.charCodeAt(0)-64;return[+m[2]-1,c-1]}
+const raw=(r,c)=>{const x=sh().cells[r+','+c];return x&&x.v!=null?String(x.v):''};
+function ev(r,c){
+  const k=r+','+c;if(k in cache)return cache[k];if(busy.has(k))return'#CYCLE';
+  busy.add(k);const s=raw(r,c);let o;
+  if(s[0]!=='=')o=s.trim()!==''&&!isNaN(s)?Number(s):s;
+  else{try{o=calc(s.slice(1))}catch(e){o='#ERR'}}
+  busy.delete(k);cache[k]=o;return o;
+}
+const fl=a=>a.flat(Infinity),nums=a=>fl(a).filter(x=>typeof x==='number');
+const FN={
+ SUM:(...a)=>nums(a).reduce((x,y)=>x+y,0),
+ AVERAGE:(...a)=>{const n=nums(a);return n.length?n.reduce((x,y)=>x+y,0)/n.length:'#DIV/0'},
+ MIN:(...a)=>Math.min(...nums(a)),MAX:(...a)=>Math.max(...nums(a)),
+ COUNT:(...a)=>nums(a).length,IF:(c,a,b)=>c?a:b,
+ ROUND:(x,n=0)=>Math.round(x*10**n)/10**n,ABS:x=>Math.abs(x)
+};
+function calc(e){
+  const x=e.split(/("[^"]*")/).map((p,i)=>i%2?p:p.toUpperCase().replace(/([A-Z]+\d+):([A-Z]+\d+)|([A-Z]+\d+)/g,(m,a,b,c)=>a?`R("${a}","${b}")`:`C("${c}")`)).join('')
+   .replace(/<>/g,'!=').replace(/(^|[^<>!=])=(?!=)/g,'$1==');
+  if(!/^[\dA-Z\s+\-*\/().,<>=!&|%?:_]*$/.test(x.replace(/"[^"]*"/g,'""')))throw 0;
+  const C=s=>{const [r,c]=pr(s);const v=ev(r,c);return v===''?0:v};
+  const R=(a,b)=>{const [r1,c1]=pr(a),[r2,c2]=pr(b),o=[];
+    for(let r=Math.min(r1,r2);r<=Math.max(r1,r2);r++)for(let c=Math.min(c1,c2);c<=Math.max(c1,c2);c++)o.push(ev(r,c));return o};
+  const v=new Function('R','C',...Object.keys(FN),'return('+x+')')(R,C,...Object.values(FN));
+  if(typeof v==='number'&&!isFinite(v))return'#ERR';return v;
+}
+function fmt(v){return typeof v==='number'?String(parseFloat(v.toFixed(8))):String(v)}
+const esc=s=>s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const cw=(s,c)=>s.widths[c]||DW;
+function tw(){const s=sh();let t=RW;for(let c=0;c<s.cols;c++)t+=cw(s,c);$('t').style.width=t+'px'}
+
+/* ---------- home ---------- */
+function home(){
+  cur=null;editing=false;$('app').style.display='none';$('home').style.display='block';
+  const l=$('list');l.innerHTML='';
+  const bs=[...DB.books].sort((a,b)=>b.updated-a.updated);
+  if(!bs.length)l.innerHTML='<p class="meta">Abhi koi sheet nahi hai. "+ New sheet" dabayein ya Excel file upload karein.</p>';
+  bs.forEach(b=>{
+    const d=document.createElement('div');d.className='card';
+    const nm=document.createElement('div');nm.className='nm';nm.textContent=b.name;
+    const mt=document.createElement('div');mt.className='meta';
+    mt.textContent=b.sheets.length+' sheet'+(b.sheets.length>1?'s':'')+' · '+new Date(b.updated).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
+    const rn=document.createElement('button');rn.textContent='Rename';
+    const dl=document.createElement('button');dl.textContent='Delete';
+    d.append(nm,mt,rn,dl);
+    d.onclick=()=>openBook(b);
+    rn.onclick=e=>{e.stopPropagation();const i=document.createElement('input');i.value=b.name;nm.textContent='';nm.appendChild(i);i.focus();i.select();
+      i.onclick=ev2=>ev2.stopPropagation();i.onblur=()=>{b.name=i.value.trim()||b.name;save();home()};i.onkeydown=ev2=>{if(ev2.key==='Enter')i.blur()}};
+    let arm=0;
+    dl.onclick=e=>{e.stopPropagation();if(!arm){arm=1;dl.textContent='Pakka? Dobara dabayein';setTimeout(()=>{arm=0;dl.textContent='Delete'},3000)}
+      else{DB.books=DB.books.filter(x=>x!==b);save();home()}};
+    l.appendChild(d);
+  });
+}
+function openBook(b){cur=b;sel={r:0,c:0};$('home').style.display='none';$('app').style.display='flex';$('bname').value=b.name;render()}
+function msg(t){$('msg').textContent=t;if(t)setTimeout(()=>{$('msg').textContent=''},5000)}
+$('newb').onclick=()=>{const b={id:uid(),name:'Untitled',updated:Date.now(),sheets:[mk('Sheet 1')],active:0};DB.books.push(b);cur=b;save();openBook(b);$('bname').select()};
+$('homeb').onclick=()=>{save();home()};
+$('bname').onchange=()=>{cur.name=$('bname').value.trim()||'Untitled';save()};
+$('up').onchange=async e=>{
+  const f=e.target.files[0];e.target.value='';if(!f)return;
+  if(!window.XLSX){msg('Excel library load nahi hui. Internet check karke page dobara kholein.');return}
+  try{
+    const wb=XLSX.read(await f.arrayBuffer(),{type:'array',cellDates:true});
+    const sheets=wb.SheetNames.map(n=>{
+      const rows=XLSX.utils.sheet_to_json(wb.Sheets[n],{header:1,raw:true,defval:''});
+      const s=mk(n.slice(0,30));let mc=0;
+      rows.forEach((l,r)=>{mc=Math.max(mc,l.length);l.forEach((v,c)=>{
+        if(v===''||v==null)return;if(v instanceof Date)v=v.toLocaleDateString('en-GB');
+        s.cells[r+','+c]={v:String(v)}})});
+      s.rows=Math.max(100,rows.length+20);s.cols=Math.max(26,mc+1);return s});
+    if(!sheets.length){msg('File khali hai.');return}
+    const b={id:uid(),name:f.name.replace(/\.[^.]+$/,''),updated:Date.now(),sheets,active:0};
+    DB.books.push(b);cur=b;save();openBook(b);
+  }catch(err){msg('File padh nahi payi. Sahi .xlsx, .xls ya .csv file chunein.')}
+};
+
+/* ---------- sheet view ---------- */
+function render(){
+  cache={};const s=sh();let h=`<colgroup><col style="width:${RW}px">`;
+  for(let c=0;c<s.cols;c++)h+=`<col style="width:${cw(s,c)}px">`;
+  h+='</colgroup><thead><tr><th class="rh"></th>';
+  for(let c=0;c<s.cols;c++)h+=`<th>${cn(c)}<i class="rz" data-c="${c}" title="Drag karke chora/chhota karein, double-click = reset"></i></th>`;
+  h+='</tr></thead><tbody>';
+  for(let r=0;r<s.rows;r++){h+=`<tr><td class="rh">${r+1}</td>`;
+    for(let c=0;c<s.cols;c++){const x=s.cells[r+','+c]||{},v=ev(r,c);
+      const st=(x.b?'font-weight:700;':'')+(x.bg?`background:${x.bg};color:#1f2328;`:'');
+      h+=`<td data-r="${r}" data-c="${c}" class="${typeof v==='number'?'num ':''}${r===sel.r&&c===sel.c?'sel':''}" style="${st}">${esc(v===''?'':fmt(v))}</td>`}
+    h+='</tr>'}
+  $('t').innerHTML=h+'</tbody>';tw();
+  $('ref').textContent=cn(sel.c)+(sel.r+1);$('fx').value=raw(sel.r,sel.c);
+  tabs();
+}
+function tabs(){
+  const t=$('tabs');t.innerHTML='';
+  cur.sheets.forEach((s,i)=>{const d=document.createElement('div');d.className='tab'+(i===cur.active?' on':'');d.textContent=s.name;
+    d.onclick=()=>{if(i!==cur.active){cur.active=i;sel={r:0,c:0};save();render()}};
+    d.ondblclick=()=>{const inp=document.createElement('input');inp.value=s.name;d.textContent='';d.appendChild(inp);inp.focus();inp.select();
+      inp.onblur=()=>{s.name=inp.value.trim()||s.name;save();tabs()};inp.onkeydown=e=>{if(e.key==='Enter')inp.blur()};inp.onclick=e=>e.stopPropagation()};
+    t.appendChild(d)});
+  const a=document.createElement('button');a.textContent='+ Sheet';a.onclick=()=>{cur.sheets.push(mk('Sheet '+(cur.sheets.length+1)));cur.active=cur.sheets.length-1;sel={r:0,c:0};save();render()};t.appendChild(a);
+  if(cur.sheets.length>1){const d=document.createElement('button');d.textContent='Delete sheet';let arm=0;
+    d.onclick=()=>{if(!arm){arm=1;d.textContent='Pakka? Dobara dabayein';setTimeout(()=>{arm=0;d.textContent='Delete sheet'},3000)}else{cur.sheets.splice(cur.active,1);cur.active=0;sel={r:0,c:0};save();render()}};t.appendChild(d)}
+}
+function setv(r,c,v){const k=r+','+c,s=sh();const x=s.cells[k]||(s.cells[k]={});x.v=v;if(v===''&&!x.b&&!x.bg)delete s.cells[k];save()}
+function clamp(r,c){return{r:Math.max(0,Math.min(sh().rows-1,r)),c:Math.max(0,Math.min(sh().cols-1,c))}}
+function go(r,c){
+  const o=document.querySelector('td.sel');if(o)o.classList.remove('sel');
+  sel=clamp(r,c);const td=cell(sel.r,sel.c);if(td){td.classList.add('sel');td.scrollIntoView({block:'nearest',inline:'nearest'})}
+  $('ref').textContent=cn(sel.c)+(sel.r+1);$('fx').value=raw(sel.r,sel.c);
+}
+function edit(r,c,init){
+  const td=cell(r,c);if(!td)return;
+  editing=true;const i=document.createElement('input');i.value=init!=null?init:raw(r,c);td.textContent='';td.classList.remove('num');td.appendChild(i);i.focus();
+  if(init==null)i.select();let fin=0;
+  const end=(dr,dc,ok)=>{if(fin)return;fin=1;editing=false;if(ok)setv(r,c,i.value);sel=clamp(r+dr,c+dc);render();const t=cell(sel.r,sel.c);if(t)t.scrollIntoView({block:'nearest',inline:'nearest'})};
+  i.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();end(1,0,1)}else if(e.key==='Tab'){e.preventDefault();end(0,1,1)}else if(e.key==='Escape')end(0,0,0)};
+  i.onblur=()=>end(0,0,1);
+}
+$('t').addEventListener('click',e=>{const td=e.target.closest('td[data-r]');if(td&&!editing)go(+td.dataset.r,+td.dataset.c)});
+$('t').addEventListener('dblclick',e=>{
+  const z=e.target.closest('.rz');if(z){delete sh().widths[+z.dataset.c];save();render();return}
+  const td=e.target.closest('td[data-r]');if(td)edit(+td.dataset.r,+td.dataset.c)});
+$('t').addEventListener('pointerdown',e=>{
+  const z=e.target.closest('.rz');if(!z)return;e.preventDefault();
+  const c=+z.dataset.c,s=sh(),x0=e.clientX,w0=cw(s,c),col=$('t').querySelectorAll('col')[c+1];
+  z.setPointerCapture(e.pointerId);
+  const mv=m=>{const w=Math.max(40,Math.min(600,w0+m.clientX-x0));s.widths[c]=w;col.style.width=w+'px';tw()};
+  const up=()=>{z.removeEventListener('pointermove',mv);z.removeEventListener('pointerup',up);save()};
+  z.addEventListener('pointermove',mv);z.addEventListener('pointerup',up);
+});
+document.addEventListener('keydown',e=>{
+  if(!cur||editing||e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA')return;
+  const{r,c}=sel,k=e.key;
+  if(k==='ArrowDown'){e.preventDefault();go(r+1,c)}else if(k==='ArrowUp'){e.preventDefault();go(r-1,c)}
+  else if(k==='ArrowLeft'){e.preventDefault();go(r,c-1)}else if(k==='ArrowRight'||k==='Tab'){e.preventDefault();go(r,c+1)}
+  else if(k==='Enter'||k==='F2'){e.preventDefault();edit(r,c)}
+  else if(k==='Delete'||k==='Backspace'){setv(r,c,'');render()}
+  else if((e.ctrlKey||e.metaKey)&&k.toLowerCase()==='b'){e.preventDefault();bold()}
+  else if(k.length===1&&!e.ctrlKey&&!e.metaKey){e.preventDefault();edit(r,c,k)}
+});
+$('fx').onkeydown=e=>{if(e.key==='Enter'){setv(sel.r,sel.c,$('fx').value);sel=clamp(sel.r+1,sel.c);render();$('fx').blur()}};
+function fmtc(f){const s=sh(),k=sel.r+','+sel.c,x=s.cells[k]||(s.cells[k]={v:''});f(x);save();render()}
+function bold(){fmtc(x=>x.b=!x.b)}
+$('b').onclick=bold;
+$('bg').oninput=e=>fmtc(x=>x.bg=e.target.value);
+$('nobg').onclick=()=>fmtc(x=>delete x.bg);
+$('addr').onclick=()=>{sh().rows+=20;save();render()};
+$('addc').onclick=()=>{sh().cols+=1;save();render()};
+$('sortb').onclick=()=>{const s=sh(),c=sel.c,rows=[];
+  for(let r=0;r<s.rows;r++){const o={};for(let j=0;j<s.cols;j++){const x=s.cells[r+','+j];if(x)o[j]=x}rows.push({o,k:ev(r,c)})}
+  const filled=rows.filter(x=>x.k!==''),empty=rows.filter(x=>x.k==='');
+  filled.sort((a,b)=>typeof a.k==='number'&&typeof b.k==='number'?a.k-b.k:String(a.k).localeCompare(String(b.k)));
+  s.cells={};[...filled,...empty].forEach((x,r)=>{for(const j in x.o)s.cells[r+','+j]=x.o[j]});save();render()};
+
+/* ---------- export / import ---------- */
+const q=v=>/[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;
+function csv(){cache={};const s=sh();let mr=0,mc=0;
+  for(const k in s.cells){const[r,c]=k.split(',').map(Number);if(raw(r,c)!==''){mr=Math.max(mr,r+1);mc=Math.max(mc,c+1)}}
+  const o=[];for(let r=0;r<mr;r++){const l=[];for(let c=0;c<mc;c++){const v=ev(r,c);l.push(q(v===''?'':fmt(v)))}o.push(l.join(','))}return o.join('\n')}
+function parse(t){const rows=[];let row=[],f='',inq=false;
+  for(let i=0;i<t.length;i++){const ch=t[i];
+    if(inq){if(ch==='"'){if(t[i+1]==='"'){f+='"';i++}else inq=false}else f+=ch}
+    else if(ch==='"')inq=true;else if(ch===','){row.push(f);f=''}
+    else if(ch==='\n'||ch==='\r'){if(ch==='\r'&&t[i+1]==='\n')i++;row.push(f);rows.push(row);row=[];f=''}else f+=ch}
+  if(f!==''||row.length){row.push(f);rows.push(row)}return rows}
+function dlg(){$('exc').style.display=$('imc').style.display=cur?'':'none';$('dlg').style.display='flex'}
+$('io').onclick=dlg;$('bk').onclick=dlg;
+$('cl').onclick=()=>{$('dlg').style.display='none'};
+$('exc').onclick=()=>{$('ta').value=csv()};
+$('exj').onclick=()=>{$('ta').value=JSON.stringify(DB)};
+$('cp').onclick=async()=>{$('ta').select();try{await navigator.clipboard.writeText($('ta').value)}catch(e){try{document.execCommand('copy')}catch(_){}}};
+$('imc').onclick=()=>{if(!cur)return;const rows=parse($('ta').value),s=sh();
+  rows.forEach((l,r)=>l.forEach((v,c)=>{if(v!=='')s.cells[r+','+c]={...(s.cells[r+','+c]||{}),v}}));
+  s.rows=Math.max(s.rows,rows.length+10);s.cols=Math.max(s.cols,...rows.map(l=>l.length));save();render();$('dlg').style.display='none'};
+$('imj').onclick=()=>{try{const d=JSON.parse($('ta').value);
+  const add=d.books||(d.sheets?[{name:'Restored',sheets:d.sheets,active:0}]:null);if(!add)throw 0;
+  add.forEach(b=>{if(b.sheets&&b.sheets.length)DB.books.push({id:uid(),name:b.name||'Restored',updated:Date.now(),sheets:b.sheets,active:0})});
+  cur=null;save();$('dlg').style.display='none';home()}catch(e){$('ta').value='JSON sahi nahi hai.'}};
+
+if(DB.books.length===0)save();
+home();
+</script>
+</body>
+</html>
